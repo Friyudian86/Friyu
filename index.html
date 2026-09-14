@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inspection Plan | QA/QC SENA</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root { --ink:#182425; --muted:#6b7773; --paper:#f3f0e9; --panel:#fffdf8; --line:#d9d9ce; --teal:#087f78; --teal-dark:#075b58; --lime:#b7d660; --orange:#e2874b; --red:#ce5b4f; --shadow:0 18px 42px rgba(28,41,35,.09); }
+    * { box-sizing:border-box; } body { margin:0; color:var(--ink); background:var(--paper); font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    .shell { max-width:1500px; margin:0 auto; padding:24px 28px 48px; }
+    header { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; margin-bottom:28px; }
+    .eyebrow { color:var(--teal); font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; } h1 { margin:8px 0 4px; font-size:clamp(28px,4vw,52px); line-height:1; letter-spacing:-.04em; font-weight:850; } .subtitle { color:var(--muted); margin:0; font-size:14px; }
+    .actions { display:flex; gap:10px; align-items:center; } button { border:0; cursor:pointer; font:inherit; } .update { background:var(--teal); color:white; padding:12px 16px; border-radius:8px; font-weight:750; box-shadow:0 8px 18px rgba(8,127,120,.22); } .update:hover { background:var(--teal-dark); } .status { color:var(--muted); font-size:12px; text-align:right; }
+    .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; } .kpi { background:var(--panel); border:1px solid var(--line); padding:18px; box-shadow:var(--shadow); } .kpi strong { display:block; font-size:32px; letter-spacing:-.04em; } .kpi span { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+    .main-grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(360px,.65fr); gap:14px; } .panel { background:var(--panel); border:1px solid var(--line); box-shadow:var(--shadow); } .panel-head { display:flex; justify-content:space-between; align-items:center; gap:14px; padding:18px 20px 10px; } h2 { font-size:15px; margin:0; letter-spacing:-.01em; } .hint { color:var(--muted); font-size:12px; }
+    #scene { height:500px; background:#183d3b; overflow:hidden; position:relative; } #scene canvas { display:block; width:100%; height:100%; } .scene-label { position:absolute; left:20px; bottom:18px; color:#dff0da; font-size:11px; letter-spacing:.12em; text-transform:uppercase; pointer-events:none; }
+    .legend { display:flex; flex-wrap:wrap; gap:8px; max-height:112px; overflow:auto; padding:0 20px 18px; } .legend-item { display:flex; align-items:center; gap:6px; color:var(--muted); font-size:11px; } .dot { width:9px; height:9px; border-radius:50%; flex:0 0 auto; }
+    .week-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:0 20px 20px; } .week { border-left:3px solid var(--teal); background:#f2f1e9; padding:12px; min-height:94px; } .week:nth-child(2){border-color:#68a6a0}.week:nth-child(3){border-color:var(--orange)}.week:nth-child(4){border-color:var(--red)} .week b { display:block; font-size:20px; } .week span { color:var(--muted); font-size:11px; }
+    .side-stack { display:flex; flex-direction:column; gap:14px; } .bars { padding:0 20px 20px; max-height:420px; overflow:auto; } .bar-row { display:grid; grid-template-columns:155px 1fr 35px; align-items:center; gap:8px; margin:12px 0; font-size:12px; } .bar-label { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .bar-track { height:9px; background:#e5e5da; } .bar-fill { height:100%; background:var(--teal); } .bar-row:nth-child(2n) .bar-fill { background:var(--lime); } .bar-row:nth-child(3n) .bar-fill { background:var(--orange); }
+    .filters { display:flex; gap:8px; padding:0 20px 14px; } select, input { border:1px solid var(--line); padding:9px 10px; background:white; color:var(--ink); font:inherit; font-size:12px; min-width:0; } select { flex:1; }
+    .table-wrap { overflow:auto; padding:0 20px 20px; } table { width:100%; border-collapse:collapse; font-size:12px; min-width:670px; } th { color:var(--muted); text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.08em; padding:10px 8px; border-bottom:2px solid var(--ink); } td { padding:13px 8px; border-bottom:1px solid var(--line); vertical-align:top; } .person { font-weight:750; } .role { display:block; color:var(--muted); font-size:11px; margin-top:3px; } .load { display:inline-block; min-width:30px; text-align:center; padding:4px 6px; background:#e3efe4; font-weight:800; } .load.high { background:#f7d8bd; color:#8b3b20; } .area { color:var(--teal-dark); font-weight:700; } .detail { color:#56615d; line-height:1.4; max-width:250px; white-space:pre-line; max-height:48px; overflow:hidden; }
+    .full { margin-top:14px; } .footer { color:var(--muted); font-size:11px; margin-top:18px; display:flex; justify-content:space-between; gap:12px; } .empty { padding:28px 20px; color:var(--muted); }
+    @media (max-width:900px) { .main-grid { grid-template-columns:1fr; } .side-stack { display:grid; grid-template-columns:1fr 1fr; } }
+    @media (max-width:620px) { .shell { padding:18px 14px 32px; } header { display:block; } .actions { margin-top:18px; justify-content:space-between; } .status { text-align:left; } .kpis { grid-template-columns:repeat(2,1fr); } .main-grid,.side-stack { display:block; } .panel { margin-bottom:14px; } .week-grid { grid-template-columns:repeat(2,1fr); } #scene { height:350px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div><div class="eyebrow">QA/QC SENA · SEPTEMBER 2026</div><h1>Inspection Plan QA/QC SENA_PPN Period Sept 2026</h1><p class="subtitle">Peta 3D area, distribusi jabatan, dan beban inspeksi mingguan.</p></div>
+      <div class="actions"><div class="status" id="status">Memuat sumber...</div><button class="update" id="update">↻ Update otomatis</button></div>
+    </header>
+    <section class="kpis" id="kpis"></section>
+    <section class="main-grid">
+      <article class="panel"><div class="panel-head"><div><h2>Model area & distribusi inspeksi</h2><div class="hint">Ukuran balok mengikuti beban. Drag untuk memutar.</div></div></div><div id="scene"><div class="scene-label">Spatial workload map / drag to orbit</div></div><div class="legend" id="legend"></div><div class="week-grid" id="weeks"></div></article>
+      <div class="side-stack"><article class="panel"><div class="panel-head"><h2>Load per area</h2><span class="hint">Total item</span></div><div class="bars" id="area-bars"></div></article><article class="panel"><div class="panel-head"><h2>Load per jabatan</h2><span class="hint">Total item</span></div><div class="bars" id="job-bars"></div></article></div>
+    </section>
+    <article class="panel full"><div class="panel-head"><div><h2>Load kerja per nama</h2><div class="hint">Rincian area dan pekerjaan pada setiap minggu</div></div></div><div class="filters"><input id="search" placeholder="Cari nama atau jabatan..."><select id="week-filter"><option value="all">Semua minggu</option></select></div><div class="table-wrap"><table><thead><tr><th>Nama & jabatan</th><th>W2</th><th>W3</th><th>W4</th><th>W5</th><th>Total</th></tr></thead><tbody id="people-table"></tbody></table></div></article>
+    <div class="footer"><span id="source"></span><span>Auto-check sumber setiap 20 detik</span></div>
+  </main>
+<script>
+let state = { data: null, scene: null };
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const sourceFile = 'Inspection Plan _QC SENA_Period Sept 2026.xlsx';
+const text = (value) => value == null ? '' : String(value).trim();
+const normalizeArea = (area) => ['PIPE SUPPORT & PLATEFORM', 'PIPE SUPPORT & PLATFORM'].includes(area.toUpperCase()) ? 'PIPE SUPPORT & PLATFORM' : area;
+function countItems(detail) { if (!detail) return 0; const matches = detail.match(/(?:^|\n)\s*\d+\s*[.)]/g); return matches ? matches.length : 1; }
+function parseWorkbook(buffer) {
+  const workbook = XLSX.read(buffer, {type:'array'});
+  const sheet = workbook.Sheets['Sept 2026'] || workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+  const weekColumns = [['W2', 3, 4], ['W3', 5, 6], ['W4', 7, 8], ['W5', 9, 10]];
+  const people = new Map(), areas = new Map(), jobs = new Map(), weekTotals = Object.fromEntries(weekColumns.map(([week]) => [week, 0]));
+  let currentName = '', currentRole = '';
+  rows.slice(5).forEach(row => {
+    if (text(row[1])) currentName = text(row[1]);
+    if (text(row[2])) currentRole = text(row[2]);
+    if (!currentName || !currentRole) return;
+    const weeks = weekColumns.map(([week, areaColumn, detailColumn]) => {
+      const area = normalizeArea(text(row[areaColumn]));
+      const detail = text(row[detailColumn]);
+      const load = countItems(detail);
+      weekTotals[week] += load;
+      if (area) {
+        const item = areas.get(area) || {area, load:0, people:new Set(), weeks:Object.fromEntries(weekColumns.map(([key]) => [key, 0]))};
+        item.load += load; item.people.add(currentName); item.weeks[week] += load; areas.set(area, item);
+      }
+      return {week, area, detail, load};
+    });
+    const key = `${currentName}|${currentRole}`;
+    const person = people.get(key);
+    if (!person) {
+      people.set(key, {name:currentName, role:currentRole, weeks:weeks.map(item => ({...item})), totalLoad:weeks.reduce((sum, item) => sum + item.load, 0)});
+      jobs.set(currentRole, (jobs.get(currentRole) || 0) + weeks.reduce((sum, item) => sum + item.load, 0));
+      return;
+    }
+    person.totalLoad += weeks.reduce((sum, item) => sum + item.load, 0);
+    weeks.forEach((incoming, index) => {
+      const existing = person.weeks[index];
+      if (incoming.area) existing.area = existing.area && existing.area !== incoming.area ? `${existing.area} / ${incoming.area}` : incoming.area;
+      if (incoming.detail) existing.detail = [existing.detail, incoming.detail].filter(Boolean).join('\n');
+      existing.load += person.weeks[index] === incoming ? 0 : incoming.load;
+    });
+    jobs.set(currentRole, (jobs.get(currentRole) || 0) + weeks.reduce((sum, item) => sum + item.load, 0));
+  });
+  const areaList = [...areas.values()].map(item => ({...item, people:item.people.size})).sort((a,b) => b.load-a.load || a.area.localeCompare(b.area));
+  const peopleList = [...people.values()].sort((a,b) => b.totalLoad-a.totalLoad || a.name.localeCompare(b.name));
+  const jobList = [...jobs].map(([role, load]) => ({role, load})).sort((a,b) => b.load-a.load || a.role.localeCompare(b.role));
+  return {source:sourceFile, sourceUpdated:new Date().toISOString(), loadedAt:new Date().toISOString(), weeks:weekColumns.map(([key]) => ({key, label:{W2:'W2 | 05-11 Sep', W3:'W3 | 12-18 Sep', W4:'W4 | 19-25 Sep', W5:'W5 | 26 Sep-02 Oct'}[key]})), people:peopleList, areas:areaList, jobs:jobList, weekTotals, summary:{people:peopleList.length, areas:areaList.length, jobs:jobList.length, totalLoad:Object.values(weekTotals).reduce((sum, value) => sum + value, 0)}};
+}
+async function fetchData(force=false) {
+  try { const res = await fetch(force ? '/api/reload' : '/api/data'); if (!res.ok) throw new Error('API unavailable'); return res.json(); }
+  catch (error) { const res = await fetch(sourceFile); if (!res.ok) throw new Error('Gagal membaca data'); return parseWorkbook(await res.arrayBuffer()); }
+}
+function render(data) {
+  state.data = data;
+  $('status').textContent = `Sumber terbaca ${new Date(data.loadedAt).toLocaleTimeString('id-ID')}`;
+  $('source').textContent = `${data.source} · terakhir diubah ${new Date(data.sourceUpdated).toLocaleString('id-ID')}`;
+  $('kpis').innerHTML = [['people','Personel'],['areas','Area aktif'],['jobs','Jabatan'],['totalLoad','Total item inspeksi']].map(([key,label]) => `<div class="kpi"><strong>${data.summary[key]}</strong><span>${label}</span></div>`).join('');
+  $('weeks').innerHTML = data.weeks.map(w => `<div class="week"><b>${data.weekTotals[w.key]}</b><span>${w.label} · item inspeksi</span></div>`).join('');
+  $('legend').innerHTML = data.areas.map((a,i) => `<div class="legend-item"><i class="dot" style="background:${['#b7d660','#e2874b','#79b9ad','#efb866','#c8e2bd','#d56c5e','#8cb7ce'][i%7]}"></i>${esc(a.area)}</div>`).join('');
+  renderBars('area-bars', data.areas, 'area'); renderBars('job-bars', data.jobs, 'role');
+  $('week-filter').innerHTML = '<option value="all">Semua minggu</option>' + data.weeks.map(w => `<option value="${w.key}">${w.label}</option>`).join('');
+  renderTable(); renderScene(data);
+}
+function renderBars(target, items, labelKey) { const max = Math.max(...items.map(x => x.load), 1); $(target).innerHTML = items.map(x => `<div class="bar-row"><span class="bar-label" title="${esc(x[labelKey])}">${esc(x[labelKey])}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(4, x.load/max*100)}%"></div></div><b>${x.load}</b></div>`).join('') || '<div class="empty">Belum ada data.</div>'; }
+function renderTable() { const data=state.data, q=$('search').value.toLowerCase(), filter=$('week-filter').value; const rows=data.people.filter(p => `${p.name} ${p.role}`.toLowerCase().includes(q)).filter(p => filter==='all' || p.weeks.some(w => w.week===filter && w.load)); $('people-table').innerHTML=rows.map(p => `<tr><td><span class="person">${esc(p.name)}</span><span class="role">${esc(p.role)}</span></td>${p.weeks.map(w => `<td><span class="load ${w.load>=4?'high':''}">${w.load}</span><div class="area">${esc(w.area || '-')}</div><div class="detail">${esc(w.detail || 'Tidak ada penugasan')}</div></td>`).join('')}<td><span class="load ${p.totalLoad>=10?'high':''}">${p.totalLoad}</span></td></tr>`).join('') || '<tr><td colspan="6" class="empty">Tidak ada hasil yang cocok.</td></tr>'; }
+function makeAreaLabel(area, load, color) {
+  const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 96;
+  const context = canvas.getContext('2d'); context.font = '700 26px Arial'; context.fillStyle = '#f4ffe9'; context.textAlign = 'center'; context.fillText(area, 256, 34); context.font = '22px Arial'; context.fillStyle = color; context.fillText('LOAD ' + load, 256, 70);
+  const texture = new THREE.CanvasTexture(canvas); const material = new THREE.SpriteMaterial({map: texture, transparent: true, depthTest: false}); const sprite = new THREE.Sprite(material); sprite.scale.set(2.5, .47, 1); sprite.position.y = 2.15; return sprite;
+}
+function renderScene(data) {
+  const host=$('scene'); if (state.scene) { state.scene.renderer.dispose(); host.querySelector('canvas')?.remove(); }
+  const scene=new THREE.Scene(); scene.background=new THREE.Color(0x183d3b); const camera=new THREE.PerspectiveCamera(38, host.clientWidth/host.clientHeight,.1,100); camera.position.set(0,6.5,10); const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(host.clientWidth,host.clientHeight); host.appendChild(renderer.domElement);
+  scene.add(new THREE.HemisphereLight(0xdaf4dd,0x18302f,2.2)); const key=new THREE.DirectionalLight(0xffffff,2); key.position.set(4,8,3); scene.add(key);
+  const floor=new THREE.Mesh(new THREE.CylinderGeometry(4.7,4.7,.15,64),new THREE.MeshStandardMaterial({color:0x28635d,roughness:.82})); floor.position.y=-.25; scene.add(floor);
+  const orbitRing=new THREE.Mesh(new THREE.TorusGeometry(3.45,.055,10,96),new THREE.MeshBasicMaterial({color:0xe2874b,transparent:true,opacity:.82})); orbitRing.rotation.x=Math.PI/2; orbitRing.position.y=-.1; scene.add(orbitRing);
+  const max=Math.max(...data.areas.map(a=>a.load),1), colors=[0xb7d660,0xe2874b,0x79b9ad,0xefb866,0xc8e2bd,0xd56c5e,0x8cb7ce];
+  data.areas.forEach((area,i)=>{ const angle=i/data.areas.length*Math.PI*2-Math.PI/2, radius=3.45; const group=new THREE.Group(); const h=.55+area.load/max*3.5; const radiusSize=.43+.24*area.load/max; const base=new THREE.Mesh(new THREE.CylinderGeometry(radiusSize+.18,radiusSize+.25,.16,32),new THREE.MeshStandardMaterial({color:0x254b79,roughness:.62})); base.position.y=-.12; group.add(base); const mesh=new THREE.Mesh(new THREE.CylinderGeometry(radiusSize,radiusSize,h,32),new THREE.MeshStandardMaterial({color:colors[i%colors.length],roughness:.55})); mesh.position.y=h/2-.2; group.add(mesh); group.add(makeAreaLabel(area.area, area.load, '#' + new THREE.Color(colors[i%colors.length]).getHexString())); group.position.set(Math.cos(angle)*radius,0,Math.sin(angle)*radius); group.userData=area; scene.add(group); });
+  camera.lookAt(0, .5, 0);
+  let dragging=false,lastX=0,rotation=.35; renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX}); window.addEventListener('pointerup',()=>dragging=false); renderer.domElement.addEventListener('pointermove',e=>{if(dragging){rotation+=(e.clientX-lastX)*.008;lastX=e.clientX}});
+  function animate(){ requestAnimationFrame(animate); scene.rotation.y=rotation; renderer.render(scene,camera); } animate(); state.scene={renderer};
+}
+$('update').addEventListener('click', async()=>{ $('status').textContent='Memuat ulang sumber...'; try { render(await fetchData(true)); } catch(e) { $('status').textContent=e.message; }});
+$('search').addEventListener('input',renderTable); $('week-filter').addEventListener('change',renderTable);
+(async()=>{try{render(await fetchData());}catch(e){$('status').textContent=e.message;}})();
+setInterval(async()=>{try{const fresh=await fetchData(); if(state.data && fresh.loadedAt !== state.data.loadedAt) render(fresh);}catch(e){/* keep current view when source is temporarily unavailable */}},20000);
+window.addEventListener('resize',()=>{if(state.scene){const host=$('scene');state.scene.renderer.setSize(host.clientWidth,host.clientHeight);}});
+</script>
+</body>
+</html>
