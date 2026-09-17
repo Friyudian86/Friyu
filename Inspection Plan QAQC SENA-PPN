@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172c2b">
+  <title>Inspection Plan QA/QC SENA - Dashboard</title>
+  <style>
+    :root {
+      --ink: #172c2b;
+      --muted: #667572;
+      --paper: #f1f2f0;
+      --panel: #fffdf8;
+      --line: #d9dfdb;
+      --accent: #e36f45;
+      --accent-dark: #bd4f2b;
+      --teal: #28756b;
+      --yellow: #e9b949;
+      --shadow: 0 18px 50px rgba(23, 44, 43, .08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .shell { max-width: 1500px; margin: 0 auto; padding: 28px 30px 56px; }
+    .topbar { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 28px; }
+    .eyebrow { color: var(--accent-dark); font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 10px; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { max-width: 760px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(30px, 4vw, 54px); line-height: .98; letter-spacing: -.04em; }
+    .subtitle { color: var(--muted); margin-top: 12px; font-size: 14px; }
+    .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
+    .button { border: 1px solid var(--line); border-radius: 8px; padding: 11px 15px; color: var(--ink); background: var(--panel); font-weight: 750; box-shadow: 0 4px 12px rgba(23,44,43,.04); }
+    .button:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .button.primary { color: #fff; border-color: var(--ink); background: var(--ink); }
+    .button:disabled { opacity: .55; cursor: wait; transform: none; }
+    .last-update { color: var(--muted); font-size: 12px; text-align: right; margin-top: 8px; }
+    .filters { display: grid; grid-template-columns: minmax(190px, .6fr) minmax(240px, 1fr) 1.7fr; gap: 14px; margin-bottom: 18px; }
+    .control { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+    .control label { display: block; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; margin-bottom: 7px; }
+    .control input, .control select { width: 100%; border: 0; outline: 0; color: var(--ink); background: transparent; font-weight: 700; }
+    .status { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; padding: 0 4px; }
+    .status-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--teal); }
+    .status-dot.loading { background: var(--yellow); animation: pulse 1s infinite; }
+    @keyframes pulse { 50% { opacity: .35; } }
+    .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 18px; }
+    .kpi, .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); }
+    .kpi { padding: 18px; min-height: 112px; border-top: 3px solid var(--accent); }
+    .kpi:nth-child(2) { border-color: var(--teal); } .kpi:nth-child(3) { border-color: var(--yellow); } .kpi:nth-child(4) { border-color: #8f9ed8; } .kpi:nth-child(5) { border-color: #b574a0; }
+    .kpi-label { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+    .kpi-value { font-family: Georgia, serif; font-size: 38px; line-height: 1; margin-top: 15px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .panel { padding: 20px; min-width: 0; }
+    .panel.wide { grid-column: 1 / -1; }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    h2 { font-size: 18px; letter-spacing: -.02em; } .panel-note { color: var(--muted); font-size: 12px; margin-top: 5px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 13px; justify-content: flex-end; font-size: 11px; color: var(--muted); }
+    .legend span { display: inline-flex; align-items: center; gap: 5px; } .swatch { width: 9px; height: 9px; border-radius: 50%; }
+    .bars { display: flex; flex-direction: column; gap: 11px; }
+    .bar-row { display: grid; grid-template-columns: minmax(110px, 1fr) minmax(110px, 2.2fr) 38px; gap: 10px; align-items: center; font-size: 12px; }
+    .bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; } .bar-track { height: 11px; background: #e8ece8; border-radius: 20px; overflow: hidden; } .bar-fill { height: 100%; background: var(--accent); border-radius: inherit; transition: width .45s ease; } .bar-fill.teal { background: var(--teal); } .bar-value { text-align: right; font-weight: 800; }
+    .scene-wrap { height: 440px; position: relative; border-radius: 10px; overflow: hidden; background: radial-gradient(circle at 50% 44%, #294c48, #172c2b 70%); }
+    #scene { width: 100%; height: 100%; display: block; } .scene-hint { position: absolute; left: 16px; bottom: 13px; color: rgba(255,255,255,.7); font-size: 11px; pointer-events: none; }
+    .tooltip { position: fixed; z-index: 10; pointer-events: none; max-width: 280px; padding: 11px 13px; color: #fff; background: rgba(23,44,43,.94); border-radius: 8px; font-size: 12px; line-height: 1.45; opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; }
+    .tooltip.show { opacity: 1; transform: translateY(0); } .tooltip strong { display: block; color: #ffe0b5; font-size: 13px; }
+    .table-wrap { overflow: auto; max-height: 430px; border: 1px solid var(--line); border-radius: 8px; } table { width: 100%; border-collapse: collapse; font-size: 12px; } th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; } th { position: sticky; top: 0; z-index: 1; background: #f5f6f2; color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; } tbody tr { cursor: pointer; } tbody tr:hover { background: #fff1e9; } .load-pill { display: inline-block; min-width: 30px; padding: 4px 7px; border-radius: 20px; color: #fff; background: var(--ink); text-align: center; font-weight: 800; }
+    .empty { color: var(--muted); padding: 25px 0; text-align: center; font-size: 13px; }
+    .modal-backdrop, .login { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(23,44,43,.68); } .modal-backdrop[hidden], .login[hidden] { display: none; }
+    .modal, .login-card { width: min(720px, 100%); max-height: 88vh; overflow: auto; padding: 25px; border-radius: 13px; background: var(--panel); box-shadow: 0 25px 80px rgba(0,0,0,.25); } .login-card { width: min(430px,100%); text-align: center; } .login-card h2 { font-family: Georgia, serif; font-size: 28px; margin-bottom: 9px; } .login-card p { color: var(--muted); font-size: 13px; line-height: 1.5; margin-bottom: 18px; } .login-card input { width: 100%; padding: 13px; border: 1px solid var(--line); border-radius: 7px; margin-bottom: 10px; } .login-card .button { width: 100%; } .login-error { min-height: 21px; color: var(--accent-dark); font-size: 12px; margin-top: 10px; }
+    .modal-close { float: right; border: 0; background: transparent; color: var(--muted); font-size: 22px; } .detail-block { padding: 15px 0; border-bottom: 1px solid var(--line); } .detail-block:last-child { border-bottom: 0; } .detail-block h3 { font-size: 14px; } .detail-block p { color: var(--muted); white-space: pre-line; font-size: 13px; line-height: 1.55; margin-top: 7px; }
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 30; max-width: 340px; padding: 12px 15px; border-radius: 8px; color: #fff; background: var(--ink); font-size: 13px; opacity: 0; transform: translateY(10px); pointer-events: none; transition: .2s; } .toast.show { opacity: 1; transform: none; }
+    footer { color: var(--muted); font-size: 11px; line-height: 1.5; margin-top: 18px; }
+    @media (max-width: 900px) { .topbar { flex-direction: column; } .actions { justify-content: flex-start; } .last-update { text-align: left; } .filters, .kpis { grid-template-columns: repeat(2, 1fr); } .status { grid-column: 1 / -1; } .grid { grid-template-columns: 1fr; } .panel.wide { grid-column: auto; } }
+    @media (max-width: 560px) { .shell { padding: 20px 14px 38px; } .filters, .kpis { grid-template-columns: 1fr; } .actions { width: 100%; } .button { flex: 1; } .scene-wrap { height: 350px; } .bar-row { grid-template-columns: 95px 1fr 30px; } }
+    @media print { body { background: #fff; } .shell { max-width: none; padding: 0; } .actions, .filters, .scene-hint, .tooltip, footer, .modal-backdrop { display: none !important; } .panel, .kpi { box-shadow: none; break-inside: avoid; } .scene-wrap { height: 360px; } .grid { gap: 10px; } }
+  </style>
+</head>
+<body>
+  <div id="loginScreen" class="login">
+    <form id="loginForm" class="login-card">
+      <div class="eyebrow">Restricted dashboard</div>
+      <h2>Inspection Plan SENA</h2>
+      <p>Masukkan password untuk membuka ringkasan QA/QC.</p>
+      <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Password" autofocus>
+      <button class="button primary" type="submit">Buka Dashboard</button>
+      <div id="loginError" class="login-error" aria-live="polite"></div>
+    </form>
+  </div>
+
+  <main id="app" class="shell" hidden>
+    <header class="topbar">
+      <div><div class="eyebrow">QA / QC SENA · Live inspection planning</div><h1>Inspection Plan<br>QA/QC SENA</h1><p class="subtitle" id="periodText">Memuat periode aktif...</p></div>
+      <div><div class="actions"><button id="refreshButton" class="button primary">↻ Refresh data</button><button id="printButton" class="button">⎙ Print to PDF</button></div><div id="lastUpdate" class="last-update">Terakhir update: -</div></div>
+    </header>
+    <section class="filters" aria-label="Filter dashboard">
+      <div class="control"><label for="weekFilter">Periode</label><select id="weekFilter"></select></div>
+      <div class="control"><label for="nameSearch">Search nama</label><input id="nameSearch" type="search" placeholder="Contoh: Agus Parwedi"></div>
+      <div class="status"><span id="statusDot" class="status-dot"></span><span id="statusText">Demo data aktif. Ganti DATA_SOURCE_URL untuk data live.</span></div>
+    </section>
+    <section id="kpis" class="kpis"></section>
+    <section class="grid">
+      <article class="panel"><div class="panel-head"><div><h2>Load per Area</h2><p class="panel-note">Jumlah area handling + item pekerjaan</p></div><div id="areaLegend" class="legend"></div></div><div id="areaBars" class="bars"></div></article>
+      <article class="panel"><div class="panel-head"><div><h2>Load per Jabatan</h2><p class="panel-note">Akumulasi beban per role</p></div></div><div id="roleBars" class="bars"></div></article>
+      <article class="panel wide"><div class="panel-head"><div><h2>Load sphere</h2><p class="panel-note">Ukuran bola mengikuti load. Drag untuk rotate, scroll untuk zoom, klik untuk detail.</p></div><div id="sphereLegend" class="legend"></div></div><div class="scene-wrap"><canvas id="scene"></canvas><div class="scene-hint">OrbitControls aktif · hover bola untuk info</div></div></article>
+      <article class="panel wide"><div class="panel-head"><div><h2>Load per Nama / Minggu</h2><p class="panel-note">Klik baris untuk membuka overall detail pekerjaan dan breakdown minggu.</p></div></div><div class="table-wrap"><table><thead><tr><th>Nama</th><th>Jabatan</th><th>Area aktif</th><th>Detail poin</th><th>Load</th></tr></thead><tbody id="peopleTable"></tbody></table></div></article>
+    </section>
+    <footer>Catatan: password ini hanya deterrent client-side, bukan proteksi enterprise. Semua kode dan data yang dikirim ke browser tetap dapat dilihat pengguna.</footer>
+  </main>
+
+  <div id="personModal" class="modal-backdrop" hidden><section class="modal"><button class="modal-close" data-close="personModal" aria-label="Tutup">×</button><div class="eyebrow">Inspector detail</div><h2 id="modalTitle"></h2><p id="modalRole" class="panel-note"></p><div id="modalBody"></div></section></div>
+  <div id="tooltip" class="tooltip"></div><div id="toast" class="toast" role="status"></div>
+
+  <!--
+    CUSTOMIZATION
+    1) Ganti DATA_SOURCE_URL dengan URL CSV Google Sheets yang dipublish, atau URL
+       Google Apps Script doGet. Kosongkan string untuk memakai DEMO_DATA.
+    2) Ubah DASHBOARD_PASSWORD. Ini bukan keamanan production karena validasi berada
+       di browser. Untuk CSV: Google Sheets > File > Share > Publish to web > CSV.
+       Jika fetch ditolak CORS, gunakan Apps Script Web App (Execute as Me, Anyone):
+       function doGet(){ return ContentService.createTextOutput( ...CSV... )
+       .setMimeType(ContentService.MimeType.CSV); }
+    3) Parser menerima format tidy: No,Nama,Jabatan,Minggu,Area,Detail_Pekerjaan,
+       atau format wide spreadsheet: No,Nama,Jabatan,Deskripsi Pekerjaan,W2 (..),...
+       dengan subkolom Area dan Detail Pekerjaan. Nama/Jabatan kosong pada baris
+       lanjutan akan di-forward-fill.
+    Three.js dipilih karena OrbitControls dan raycasting hover/click tersedia,
+    ringan untuk static hosting, dan tidak membutuhkan build tool.
+  -->
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
+    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/OrbitControls.js';
+
+    const DATA_SOURCE_URL = ''; // Ganti dengan CSV/Apps Script URL data asli.
+    const DASHBOARD_PASSWORD = 'sena2026'; // Ganti sebelum deploy.
+    const DEMO_DATA = [
+      { No: 1, Nama: 'Agus Parwedi', Jabatan: 'Civil & Structure Inspector', Deskripsi: 'Pengawasan pekerjaan sipil dan penutupan punch list area SWI.', Minggu: 'W2 (Sept 05 ~ 11)', Area: 'SWI', Detail_Pekerjaan: '1). Review dokumen RFI shoreline\n2). Monitoring closing punch list cofferdam' },
+      { No: 1, Nama: 'Agus Parwedi', Jabatan: 'Civil & Structure Inspector', Deskripsi: 'Pengawasan pekerjaan sipil dan penutupan punch list area SWI.', Minggu: 'W3 (Sept 12 ~ 18)', Area: 'SWI', Detail_Pekerjaan: '1). Closing punch list capping beam\n2). Review as-built document\n3). Monitoring site' },
+      { No: 2, Nama: 'Adi Purwanto', Jabatan: 'Civil & Structure Inspector', Deskripsi: 'Inspeksi struktur retention basin dan platform.', Minggu: 'W2 (Sept 05 ~ 11)', Area: 'OC-O', Detail_Pekerjaan: '1). Pouring concrete wall basin\n2). Inspection waterstop\n3). Inspection anchor bolt' },
+      { No: 2, Nama: 'Adi Purwanto', Jabatan: 'Civil & Structure Inspector', Deskripsi: 'Inspeksi struktur retention basin dan platform.', Minggu: 'W3 (Sept 12 ~ 18)', Area: 'OC-O', Detail_Pekerjaan: '1). Survey anchor cable tray\n2). Grouting pedestal\n3). Pouring concrete footing' },
+      { No: 3, Nama: 'Maya Lestari', Jabatan: 'QAQC Engineer', Deskripsi: 'Koordinasi mutu, review ITP, dan audit dokumentasi.', Minggu: 'W2 (Sept 05 ~ 11)', Area: 'TANK A5', Detail_Pekerjaan: '1). Review ITP tank foundation\n2). Witness reinforcement inspection' },
+      { No: 3, Nama: 'Maya Lestari', Jabatan: 'QAQC Engineer', Deskripsi: 'Koordinasi mutu, review ITP, dan audit dokumentasi.', Minggu: 'W3 (Sept 12 ~ 18)', Area: 'PIPE SUPPORT & PLATFORM', Detail_Pekerjaan: '1). Audit material traceability\n2). Review NCR status\n3). Witness bolt tightening' },
+      { No: 4, Nama: 'Rizky Kurniawan', Jabatan: 'Piping Inspector', Deskripsi: 'Inspeksi instalasi piping dan test package.', Minggu: 'W2 (Sept 05 ~ 11)', Area: 'PIPE RACK', Detail_Pekerjaan: '1). Visual inspection piping\n2). Check support installation' },
+      { No: 4, Nama: 'Rizky Kurniawan', Jabatan: 'Piping Inspector', Deskripsi: 'Inspeksi instalasi piping dan test package.', Minggu: 'W3 (Sept 12 ~ 18)', Area: 'PIPE RACK', Detail_Pekerjaan: '1). Hydrotest preparation\n2). Flange alignment\n3). Punch list walkdown\n4). Test package review' },
+      { No: 5, Nama: 'Dewi Anggraini', Jabatan: 'QAQC Coordinator', Deskripsi: 'Koordinasi harian tim QA/QC dan pelaporan progress.', Minggu: 'W2 (Sept 05 ~ 11)', Area: 'SENA OFFICE', Detail_Pekerjaan: '1). Compile weekly report\n2). Coordinate inspection request' },
+      { No: 5, Nama: 'Dewi Anggraini', Jabatan: 'QAQC Coordinator', Deskripsi: 'Koordinasi harian tim QA/QC dan pelaporan progress.', Minggu: 'W3 (Sept 12 ~ 18)', Area: 'SENA OFFICE', Detail_Pekerjaan: '1). Update dashboard\n2). QAQC coordination meeting' }
+    ];
+
+    let records = DEMO_DATA.slice();
+    let scene, camera, renderer, controls, raycaster, pointer;
+    let spheres = [];
+    const colors = ['#e36f45', '#28756b', '#e9b949', '#8f9ed8', '#b574a0', '#5c9ac1', '#a7b85c', '#d36e86'];
+    const $ = (id) => document.getElementById(id);
+
+    $('loginForm').addEventListener('submit', (event) => { event.preventDefault(); if ($('passwordInput').value === DASHBOARD_PASSWORD) { $('loginScreen').hidden = true; $('app').hidden = false; init(); } else { $('loginError').textContent = 'Password tidak sesuai.'; $('passwordInput').select(); } });
+    $('refreshButton').addEventListener('click', loadData);
+    $('printButton').addEventListener('click', () => window.print());
+    $('weekFilter').addEventListener('change', render);
+    $('nameSearch').addEventListener('input', render);
+    document.querySelectorAll('[data-close]').forEach((button) => button.addEventListener('click', () => $(button.dataset.close).hidden = true));
+    $('personModal').addEventListener('click', (event) => { if (event.target === $('personModal')) $('personModal').hidden = true; });
+
+    function init() { setupScene(); render(); updateTime(); }
+    async function loadData() {
+      $('refreshButton').disabled = true; $('statusDot').classList.add('loading'); $('statusText').textContent = 'Mengambil data terbaru...';
+      try { records = DATA_SOURCE_URL ? await fetchRecords(DATA_SOURCE_URL) : DEMO_DATA.slice(); if (!records.length) throw new Error('Tidak ada baris data valid.'); $('statusText').textContent = DATA_SOURCE_URL ? 'Data live berhasil dimuat.' : 'Demo data aktif. Ganti DATA_SOURCE_URL untuk data live.'; render(); updateTime(); toast('Data berhasil diperbarui.'); }
+      catch (error) { records = DEMO_DATA.slice(); $('statusText').textContent = `Gagal mengambil data live: ${error.message}. Demo dipakai.`; render(); toast('Data live gagal, dashboard kembali ke demo.'); }
+      finally { $('refreshButton').disabled = false; $('statusDot').classList.remove('loading'); }
+    }
+    function updateTime() { $('lastUpdate').textContent = `Terakhir update: ${new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date())}`; }
+    async function fetchRecords(url) { const response = await fetch(url, { cache: 'no-store' }); if (!response.ok) throw new Error(`HTTP ${response.status}`); const text = await response.text(); return normalizeRows(parseCSV(text)); }
+    function parseCSV(text) { const rows = []; let row = [], cell = '', quoted = false; for (let i = 0; i < text.length; i++) { const char = text[i], next = text[i + 1]; if (char === '"' && quoted && next === '"') { cell += '"'; i++; } else if (char === '"') quoted = !quoted; else if (char === ',' && !quoted) { row.push(cell.trim()); cell = ''; } else if ((char === '\n' || char === '\r') && !quoted) { if (char === '\r' && next === '\n') i++; row.push(cell.trim()); if (row.some(Boolean)) rows.push(row); row = []; cell = ''; } else cell += char; } if (cell || row.length) { row.push(cell.trim()); rows.push(row); } const headers = (rows.shift() || []).map((header) => header.replace(/^\uFEFF/, '').trim()); return rows.map((values) => Object.fromEntries(headers.map((header, i) => [header, values[i] || '']))); }
+    function normalizeRows(rows) { if (!rows.length) return []; const keys = Object.keys(rows[0]); const tidy = keys.some((key) => /^(minggu|week)$/i.test(key)); if (tidy) return rows.map((row) => ({ No: row.No || '', Nama: row.Nama || row.Name || '', Jabatan: row.Jabatan || row.Role || '', Deskripsi: row.Deskripsi || row['Deskripsi Pekerjaan'] || row.Overall || '', Minggu: row.Minggu || row.Week || '', Area: row.Area || '', Detail_Pekerjaan: row.Detail_Pekerjaan || row['Detail Pekerjaan'] || row.Detail || '' })).filter((row) => row.Nama && row.Area); const output = []; let person = { No: '', Nama: '', Jabatan: '', Deskripsi: '' }; const weekKeys = keys.filter((key) => /^W\d+/i.test(key)); rows.forEach((row) => { person = { No: row.No || person.No, Nama: row.Nama || person.Nama, Jabatan: row.Jabatan || person.Jabatan, Deskripsi: row['Deskripsi Pekerjaan'] || row.Deskripsi || person.Deskripsi }; weekKeys.forEach((week) => { const area = row[week] || ''; const detailKey = keys[keys.indexOf(week) + 1]; const detail = row[detailKey] || ''; if (area) output.push({ ...person, Minggu: week, Area: area, Detail_Pekerjaan: detail }); }); }); return output; }
+    function selectedRecords() { const week = $('weekFilter').value || 'all'; const query = $('nameSearch').value.trim().toLowerCase(); return records.filter((row) => (week === 'all' || row.Minggu === week) && (!query || row.Nama.toLowerCase().includes(query))); }
+    function pointCount(detail) { const matches = String(detail || '').match(/(?:^|\n)\s*(?:\d+\s*[).]|[-•])\s*/g); return Math.max(matches ? matches.length : 0, detail.trim() ? 1 : 0); }
+    function aggregate(rows, key) { const map = new Map(); rows.forEach((row) => { const value = row[key] || 'Tanpa label'; const load = 1 + pointCount(row.Detail_Pekerjaan); map.set(value, (map.get(value) || 0) + load); }); return [...map].map(([label, load]) => ({ label, load })).sort((a, b) => b.load - a.load); }
+    function render() { const rows = selectedRecords(); const weeks = [...new Set(records.map((row) => row.Minggu).filter(Boolean))]; const current = $('weekFilter').value; $('weekFilter').innerHTML = `<option value="all">All weeks</option>${weeks.map((week) => `<option value="${escapeHtml(week)}">${escapeHtml(week)}</option>`).join('')}`; $('weekFilter').value = current && (current === 'all' || weeks.includes(current)) ? current : 'all'; $('periodText').textContent = `${weeks.length} periode terdeteksi · ${rows.length} activity rows pada filter aktif`; renderKpis(rows, weeks); renderBars('areaBars', aggregate(rows, 'Area'), false); renderBars('roleBars', aggregate(rows, 'Jabatan'), true); renderTable(rows); renderScene(rows); }
+    function renderKpis(rows, weeks) { const areas = new Set(rows.map((row) => row.Area)); const people = new Set(rows.map((row) => row.Nama)); const roles = new Set(rows.map((row) => row.Jabatan)); const load = rows.reduce((sum, row) => sum + 1 + pointCount(row.Detail_Pekerjaan), 0); $('kpis').innerHTML = [['Total load', load], ['Inspector', people.size], ['Area aktif', areas.size], ['Periode', weeks.length], ['Jabatan', roles.size]].map(([label, value]) => `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div></div>`).join(''); }
+    function renderBars(id, items, teal) { const target = $(id); if (!items.length) { target.innerHTML = '<div class="empty">Tidak ada data untuk filter ini.</div>'; return; } const max = items[0].load; target.innerHTML = items.slice(0, 12).map((item) => `<div class="bar-row"><div class="bar-label" title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</div><div class="bar-track"><div class="bar-fill ${teal ? 'teal' : ''}" style="width:${Math.max(4, item.load / max * 100)}%"></div></div><div class="bar-value">${item.load}</div></div>`).join(''); }
+    function renderTable(rows) { const map = new Map(); rows.forEach((row) => { const key = row.Nama; if (!map.has(key)) map.set(key, { ...row, areas: new Set(), points: 0, load: 0 }); const item = map.get(key); item.areas.add(row.Area); item.points += pointCount(row.Detail_Pekerjaan); item.load += 1 + pointCount(row.Detail_Pekerjaan); }); const body = $('peopleTable'); body.innerHTML = [...map.values()].sort((a, b) => b.load - a.load).map((item) => `<tr data-name="${escapeHtml(item.Nama)}"><td><strong>${escapeHtml(item.Nama)}</strong></td><td>${escapeHtml(item.Jabatan)}</td><td>${[...item.areas].map(escapeHtml).join(', ')}</td><td>${item.points}</td><td><span class="load-pill">${item.load}</span></td></tr>`).join('') || '<tr><td colspan="5" class="empty">Tidak ada data.</td></tr>'; body.querySelectorAll('tr[data-name]').forEach((row) => row.addEventListener('click', () => openPerson(row.dataset.name))); }
+    function openPerson(name) { const personRows = records.filter((row) => row.Nama === name); const first = personRows[0]; $('modalTitle').textContent = name; $('modalRole').textContent = first.Jabatan; $('modalBody').innerHTML = `<div class="detail-block"><h3>Overall detail pekerjaan</h3><p>${escapeHtml(first.Deskripsi || 'Tidak tersedia')}</p></div>` + personRows.map((row) => `<div class="detail-block"><h3>${escapeHtml(row.Minggu)} · ${escapeHtml(row.Area)}</h3><p>${escapeHtml(row.Detail_Pekerjaan)}</p></div>`).join(''); $('personModal').hidden = false; }
+    function setupScene() { const canvas = $('scene'); renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(42, 1, .1, 100); camera.position.set(0, 1.2, 11); controls = new OrbitControls(camera, canvas); controls.enableDamping = true; controls.minDistance = 5; controls.maxDistance = 18; scene.add(new THREE.AmbientLight(0xffffff, 1.8)); const light = new THREE.DirectionalLight(0xffd8bd, 3); light.position.set(4, 6, 8); scene.add(light); raycaster = new THREE.Raycaster(); pointer = new THREE.Vector2(); canvas.addEventListener('pointermove', onPointerMove); canvas.addEventListener('click', onSphereClick); window.addEventListener('resize', resizeScene); resizeScene(); animate(); }
+    function resizeScene() { if (!renderer) return; const box = $('scene').getBoundingClientRect(); renderer.setSize(box.width, box.height, false); camera.aspect = box.width / box.height; camera.updateProjectionMatrix(); }
+    function renderScene(rows) { if (!scene) return; spheres.forEach((mesh) => scene.remove(mesh)); spheres = []; const people = aggregatePeople(rows); const radiusScale = people.length ? Math.min(1.2, 4.8 / Math.sqrt(people.length)) : 1; people.forEach((item, index) => { const geometry = new THREE.SphereGeometry(Math.max(.28, Math.sqrt(item.load) * .25 * radiusScale), 28, 20); const material = new THREE.MeshStandardMaterial({ color: colors[index % colors.length], roughness: .33, metalness: .08 }); const mesh = new THREE.Mesh(geometry, material); const phi = Math.acos(-1 + (2 * index + 1) / Math.max(1, people.length)); const theta = Math.sqrt(people.length * Math.PI) * index; mesh.position.set(4.2 * Math.cos(theta) * Math.sin(phi), 4.2 * Math.cos(phi), 4.2 * Math.sin(theta) * Math.sin(phi)); mesh.userData = item; scene.add(mesh); spheres.push(mesh); }); $('sphereLegend').innerHTML = people.slice(0, 8).map((item, i) => `<span><i class="swatch" style="background:${colors[i % colors.length]}"></i>${escapeHtml(item.label)}</span>`).join(''); }
+    function aggregatePeople(rows) { const map = new Map(); rows.forEach((row) => { const existing = map.get(row.Nama) || { label: row.Nama, role: row.Jabatan, load: 0, areas: new Set() }; existing.load += 1 + pointCount(row.Detail_Pekerjaan); existing.areas.add(row.Area); map.set(row.Nama, existing); }); return [...map.values()].sort((a, b) => b.load - a.load); }
+    function onPointerMove(event) { const rect = $('scene').getBoundingClientRect(); pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1; pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1; raycaster.setFromCamera(pointer, camera); const hit = raycaster.intersectObjects(spheres)[0]; if (hit) { const item = hit.object.userData; $('tooltip').innerHTML = `<strong>${escapeHtml(item.label)}</strong>${escapeHtml(item.role)}<br>Load: ${item.load}<br>Area: ${[...item.areas].map(escapeHtml).join(', ')}`; $('tooltip').style.left = `${event.clientX + 14}px`; $('tooltip').style.top = `${event.clientY + 14}px`; $('tooltip').classList.add('show'); } else $('tooltip').classList.remove('show'); }
+    function onSphereClick() { raycaster.setFromCamera(pointer, camera); const hit = raycaster.intersectObjects(spheres)[0]; if (hit) openPerson(hit.object.userData.label); }
+    function animate() { requestAnimationFrame(animate); if (controls) controls.update(); if (renderer && scene && camera) renderer.render(scene, camera); }
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char])); }
+    function toast(message) { const target = $('toast'); target.textContent = message; target.classList.add('show'); setTimeout(() => target.classList.remove('show'), 2600); }
+  </script>
+</body>
+</html>  
